@@ -304,14 +304,25 @@ def display_table(current_state, action, next_state, reward, done):
     STATE_VECTOR_COL_NAME = 'State Vector'
     DERIVED_COL_NAME = 'Derived from the State Vector (the closer to zero, the better)'
     
+    def extract_state_values(state):
+        # Check if the state is a dictionary and extract values if necessary
+        if isinstance(state, dict):
+            # Extract the state values from the dictionary (modify as per your state structure)
+            state = state.get('state', state)  # Modify 'state' key if necessary
+        return state
+    
     # States
     add_derived_info = lambda state: np.hstack([
-        state, 
+        np.array(state),
+        #state, 
         [(state[0]**2 + state[1]**2)**.5],
         [(state[2]**2 + state[3]**2)**.5],
         [np.abs(state[4])]
     ])
     
+    current_state_values = extract_state_values(current_state)
+    next_state_values = extract_state_values(next_state)
+
     modified_current_state = add_derived_info(current_state)
     modified_next_state = add_derived_info(next_state)
     

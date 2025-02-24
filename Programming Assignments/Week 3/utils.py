@@ -176,6 +176,95 @@ def update_target_network(q_network, target_q_network):
         target_weights.assign(TAU * q_net_weights + (1.0 - TAU) * target_weights)
 
 
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+
+def plot_history2(point_history, **kwargs):
+    """
+    Plots the total number of points received by the agent after each episode together
+    with the moving average (rolling mean), designed for black-and-white papers.
+
+    Args:
+        point_history (list):
+            A list containing the total number of points the agent received after each
+            episode.
+        **kwargs: optional
+            window_size (int):
+                Size of the window used to calculate the moving average (rolling mean).
+                Default window size is set to 10% of the total number of episodes.
+            lower_limit (int):
+                The lower limit of the x-axis in data coordinates. Default value is 0.
+            upper_limit (int):
+                The upper limit of the x-axis in data coordinates. Default value is len(point_history).
+            plot_rolling_mean_only (bool):
+                If True, only plots the moving average (rolling mean) without the point
+                history. Default value is False.
+            plot_data_only (bool):
+                If True, only plots the point history without the moving average.
+                Default value is False.
+    """
+    lower_limit = 0
+    upper_limit = len(point_history)
+    window_size = (upper_limit * 10) // 100
+    plot_rolling_mean_only = False
+    plot_data_only = False
+
+    if kwargs:
+        if "window_size" in kwargs:
+            window_size = kwargs["window_size"]
+        if "lower_limit" in kwargs:
+            lower_limit = kwargs["lower_limit"]
+        if "upper_limit" in kwargs:
+            upper_limit = kwargs["upper_limit"]
+        if "plot_rolling_mean_only" in kwargs:
+            plot_rolling_mean_only = kwargs["plot_rolling_mean_only"]
+        if "plot_data_only" in kwargs:
+            plot_data_only = kwargs["plot_data_only"]
+
+    points = point_history[lower_limit:upper_limit]
+
+    # Generate x-axis for plotting.
+    episode_num = [x for x in range(lower_limit, upper_limit)]
+
+    # Use Pandas to calculate the rolling mean (moving average).
+    rolling_mean = pd.DataFrame(points).rolling(window_size, min_periods=1).mean()
+
+    # Set up figure with a white background
+    plt.figure(figsize=(10, 7), facecolor="white")
+
+    if plot_data_only:
+        plt.plot(episode_num, points, linestyle=":", linewidth=1, color="black", label="Episode Points")
+    elif plot_rolling_mean_only:
+        plt.plot(episode_num, rolling_mean, linestyle="-", linewidth=2, color="black", label="Rolling Mean")
+    else:
+        plt.plot(episode_num, points, linestyle=":", linewidth=1, color="gray", alpha=0.7, label="Episode Points")
+        plt.plot(episode_num, rolling_mean, linestyle="-", linewidth=2, color="black", label="Rolling Mean")
+
+    # Add a horizontal line for the solved threshold
+    solved_threshold = 200
+    plt.axhline(y=solved_threshold, color="black", linestyle="--", linewidth=1.5, label="Solved Threshold")
+    plt.text(upper_limit * 0.9, solved_threshold + 10, "Solved Threshold", fontsize=12, ha="center", va="center", color="black")
+
+    plt.grid(color="gray", linestyle="--", linewidth=0.5, alpha=0.5)
+    plt.xlabel("Episode", fontsize=14)
+    plt.ylabel("Total Points", fontsize=14)
+    plt.legend(fontsize=12, loc="upper left", frameon=False)
+    plt.title("Agent Performance Over Episodes (DQN Approach)", fontsize=16)
+    plt.tight_layout()
+
+    # Configure axis ticks and format
+    ax = plt.gca()
+    ax.set_facecolor("white")
+    yNumFmt = mticker.StrMethodFormatter("{x:,}")
+    ax.yaxis.set_major_formatter(yNumFmt)
+    ax.tick_params(axis="x", labelsize=12)
+    ax.tick_params(axis="y", labelsize=12)
+    plt.show()
+
+
+
+
 def plot_history(point_history, **kwargs):
     """
     Plots the total number of points received by the agent after each episode together
